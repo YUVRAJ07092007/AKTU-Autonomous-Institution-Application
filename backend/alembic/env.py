@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from logging.config import fileConfig
 
-from sqlalchemy import pool
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy import create_engine, pool
 
 from alembic import context
 
@@ -25,9 +24,17 @@ def get_url() -> str:
     return get_settings().database_url
 
 
+def get_sync_url() -> str:
+    """Alembic runs synchronously; use sync SQLite driver (sqlite://) not aiosqlite."""
+    url = get_url()
+    if "sqlite+aiosqlite://" in url:
+        return url.replace("sqlite+aiosqlite://", "sqlite://", 1)
+    return url
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
-    url = get_url()
+    url = get_sync_url()
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -40,28 +47,21 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode (same DB URL as app)."""
-    url = get_url()
-    connectable = create_async_engine(
+    """Run migrations in 'online' mode with a sync engine (Alembic reflection is sync)."""
+    url = get_sync_url()
+    connectable = create_engine(
         url,
         poolclass=pool.NullPool,
     )
 
-    async def do_run_migrations() -> None:
-        async with connectable.connect() as connection:
-            await connection.run_sync(
-                lambda sync_conn: context.configure(
-                    connection=sync_conn,
-                    target_metadata=target_metadata,
-                )
-            )
+    with connectable.connect() as connection:
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+        )
 
-            with context.begin_transaction():
-                context.run_migrations()
-
-    import asyncio
-
-    asyncio.run(do_run_migrations())
+        with context.begin_transaction():
+            context.run_migrations()
 
 
 if context.is_offline_mode():
