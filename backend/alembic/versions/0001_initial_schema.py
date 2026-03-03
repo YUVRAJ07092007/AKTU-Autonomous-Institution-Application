@@ -67,11 +67,7 @@ def upgrade() -> None:
         sa.Column("akt_diary_no", sa.String(length=100)),
         sa.Column("received_date", sa.DateTime(timezone=True)),
         sa.Column("remarks", sa.Text()),
-    )
-    op.create_unique_constraint(
-        "uq_dispatch_speedpost",
-        "dispatch_tracking",
-        ["application_id", "speedpost_no"],
+        sa.UniqueConstraint("application_id", "speedpost_no", name="uq_dispatch_speedpost"),
     )
 
     op.create_table(
