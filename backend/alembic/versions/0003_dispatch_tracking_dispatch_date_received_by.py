@@ -21,7 +21,12 @@ def upgrade() -> None:
     with op.batch_alter_table("dispatch_tracking", schema=None) as batch_op:
         batch_op.add_column(sa.Column("dispatch_date", sa.DateTime(timezone=True), nullable=True))
         batch_op.add_column(
-            sa.Column("received_by_user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+            sa.Column(
+                "received_by_user_id",
+                sa.Integer(),
+                sa.ForeignKey("users.id", ondelete="SET NULL", name="fk_dispatch_tracking_received_by_user_id"),
+                nullable=True,
+            ),
         )
         batch_op.create_index("ix_dispatch_tracking_received_by_user_id", ["received_by_user_id"], unique=False)
 

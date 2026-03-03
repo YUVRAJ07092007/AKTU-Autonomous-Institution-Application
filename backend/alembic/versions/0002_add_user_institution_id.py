@@ -20,7 +20,12 @@ depends_on = None
 def upgrade() -> None:
     with op.batch_alter_table("users", schema=None) as batch_op:
         batch_op.add_column(
-            sa.Column("institution_id", sa.Integer(), sa.ForeignKey("institutions.id", ondelete="SET NULL"), nullable=True),
+            sa.Column(
+                "institution_id",
+                sa.Integer(),
+                sa.ForeignKey("institutions.id", ondelete="SET NULL", name="fk_users_institution_id"),
+                nullable=True,
+            ),
         )
         batch_op.create_index("ix_users_institution_id", ["institution_id"], unique=False)
 
