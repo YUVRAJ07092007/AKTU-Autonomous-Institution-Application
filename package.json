@@ -1,0 +1,17 @@
+{
+  "name": "aktu-autonomy-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AKTU Academic Autonomy Online Application System – monorepo skeleton",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "pnpm --filter api dev",
+    "dev:web": "pnpm --filter web dev"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
