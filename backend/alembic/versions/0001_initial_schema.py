@@ -25,7 +25,11 @@ def upgrade() -> None:
         sa.Column("email", sa.String(length=255), nullable=False, unique=True),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("hashed_password", sa.String(length=255), nullable=False),
-        sa.Column("role", sa.Enum(UserRole), nullable=False),
+        sa.Column(
+            "role",
+            sa.Enum(UserRole, values_callable=lambda obj: [e.value for e in obj]),
+            nullable=False,
+        ),
     )
 
     op.create_table(
@@ -74,7 +78,11 @@ def upgrade() -> None:
         "documents",
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("application_id", sa.Integer(), sa.ForeignKey("applications.id")),
-        sa.Column("doc_type", sa.Enum(DocumentType), nullable=False),
+        sa.Column(
+            "doc_type",
+            sa.Enum(DocumentType, values_callable=lambda obj: [e.value for e in obj]),
+            nullable=False,
+        ),
         sa.Column("filename", sa.String(length=255), nullable=False),
         sa.Column("storage_path", sa.String(length=1024), nullable=False),
         sa.Column("uploaded_by", sa.Integer(), sa.ForeignKey("users.id")),

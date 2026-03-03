@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from enum import Enum as PyEnum
 from typing import List, Optional
 
 from sqlalchemy import (
@@ -18,7 +19,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
 
 
-class UserRole(str, Enum):  # type: ignore[misc]
+class UserRole(str, PyEnum):  # type: ignore[misc]
     INSTITUTION = "INSTITUTION"
     DEALING_HAND = "DEALING_HAND"
     REGISTRAR = "REGISTRAR"
@@ -27,7 +28,7 @@ class UserRole(str, Enum):  # type: ignore[misc]
     ACCOUNTS = "ACCOUNTS"
 
 
-class DocumentType(str, Enum):  # type: ignore[misc]
+class DocumentType(str, PyEnum):  # type: ignore[misc]
     COVER_LETTER = "CoverLetter"
     APPLICATION_FORM = "ApplicationForm"
     ANNEXURE_IA = "AnnexureIA"
@@ -51,7 +52,10 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[UserRole] = mapped_column(Enum(UserRole), nullable=False)
+    role: Mapped[UserRole] = mapped_column(
+        Enum(UserRole, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+    )
     institution_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("institutions.id", ondelete="SET NULL"), nullable=True, index=True
     )
@@ -139,7 +143,7 @@ class DispatchTracking(Base):
     )
 
 
-class CommitteeMemberRole(str, Enum):  # type: ignore[misc]
+class CommitteeMemberRole(str, PyEnum):  # type: ignore[misc]
     CHAIR = "CHAIR"
     CONVENER = "CONVENER"
     MEMBER = "MEMBER"
@@ -175,14 +179,18 @@ class CommitteeMember(Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     role: Mapped[CommitteeMemberRole] = mapped_column(
-        Enum(CommitteeMemberRole), nullable=False
+        Enum(
+            CommitteeMemberRole,
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
+        nullable=False,
     )
 
     committee: Mapped[Committee] = relationship(back_populates="members")
     user: Mapped[User] = relationship()
 
 
-class MeetingMode(str, Enum):  # type: ignore[misc]
+class MeetingMode(str, PyEnum):  # type: ignore[misc]
     ONLINE = "ONLINE"
     OFFLINE = "OFFLINE"
     HYBRID = "HYBRID"
@@ -194,7 +202,10 @@ class Meeting(Base):
     application_id: Mapped[int] = mapped_column(
         ForeignKey("applications.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    mode: Mapped[MeetingMode] = mapped_column(Enum(MeetingMode), nullable=False)
+    mode: Mapped[MeetingMode] = mapped_column(
+        Enum(MeetingMode, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+    )
     date_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     venue: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     online_link: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
@@ -226,7 +237,7 @@ class MomContent(Base):
     application: Mapped[Application] = relationship(back_populates="mom_versions")
 
 
-class DecisionType(str, Enum):  # type: ignore[misc]
+class DecisionType(str, PyEnum):  # type: ignore[misc]
     GRANTED = "GRANTED"
     GRANTED_WITH_CONDITIONS = "GRANTED_WITH_CONDITIONS"
     DEFERRED = "DEFERRED"
@@ -243,7 +254,10 @@ class Decision(Base):
     application_id: Mapped[int] = mapped_column(
         ForeignKey("applications.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
     )
-    decision_type: Mapped[DecisionType] = mapped_column(Enum(DecisionType), nullable=False)
+    decision_type: Mapped[DecisionType] = mapped_column(
+        Enum(DecisionType, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+    )
     tenure_years: Mapped[Optional[int]] = mapped_column(nullable=True)
     valid_from: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     valid_to: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -266,7 +280,10 @@ class Document(Base):
     application_id: Mapped[int] = mapped_column(
         ForeignKey("applications.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    doc_type: Mapped[DocumentType] = mapped_column(Enum(DocumentType), nullable=False)
+    doc_type: Mapped[DocumentType] = mapped_column(
+        Enum(DocumentType, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+    )
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     storage_path: Mapped[str] = mapped_column(String(1024), nullable=False)
     uploaded_by: Mapped[int] = mapped_column(

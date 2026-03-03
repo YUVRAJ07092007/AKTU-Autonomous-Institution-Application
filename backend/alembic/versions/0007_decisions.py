@@ -24,7 +24,11 @@ def upgrade() -> None:
         "decisions",
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("application_id", sa.Integer(), sa.ForeignKey("applications.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("decision_type", sa.Enum(DecisionType), nullable=False),
+        sa.Column(
+            "decision_type",
+            sa.Enum(DecisionType, values_callable=lambda obj: [e.value for e in obj]),
+            nullable=False,
+        ),
         sa.Column("tenure_years", sa.Integer(), nullable=True),
         sa.Column("valid_from", sa.DateTime(timezone=True), nullable=True),
         sa.Column("valid_to", sa.DateTime(timezone=True), nullable=True),

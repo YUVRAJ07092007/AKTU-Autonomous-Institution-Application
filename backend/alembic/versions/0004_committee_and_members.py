@@ -35,7 +35,14 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("committee_id", sa.Integer(), sa.ForeignKey("committees.id", ondelete="CASCADE"), nullable=False),
         sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("role", sa.Enum(CommitteeMemberRole), nullable=False),
+        sa.Column(
+            "role",
+            sa.Enum(
+                CommitteeMemberRole,
+                values_callable=lambda obj: [e.value for e in obj],
+            ),
+            nullable=False,
+        ),
     )
     op.create_index("ix_committee_members_committee_id", "committee_members", ["committee_id"], unique=False)
     op.create_index("ix_committee_members_user_id", "committee_members", ["user_id"], unique=False)

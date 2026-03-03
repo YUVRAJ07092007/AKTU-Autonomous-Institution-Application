@@ -24,7 +24,11 @@ def upgrade() -> None:
         "meetings",
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("application_id", sa.Integer(), sa.ForeignKey("applications.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("mode", sa.Enum(MeetingMode), nullable=False),
+        sa.Column(
+            "mode",
+            sa.Enum(MeetingMode, values_callable=lambda obj: [e.value for e in obj]),
+            nullable=False,
+        ),
         sa.Column("date_time", sa.DateTime(timezone=True), nullable=False),
         sa.Column("venue", sa.String(length=255), nullable=True),
         sa.Column("online_link", sa.String(length=512), nullable=True),
