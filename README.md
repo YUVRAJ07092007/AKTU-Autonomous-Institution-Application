@@ -1,5 +1,7 @@
 ## AKTU Academic Autonomy Portal
 
+**Repository:** [https://github.com/YUVRAJ07092007/AKTU-Autonomous-Institution-Application](https://github.com/YUVRAJ07092007/AKTU-Autonomous-Institution-Application)
+
 Monorepo for the AKTU Academic Autonomy Portal: FastAPI backend, Next.js frontend, Colab runbooks, and CI.
 
 ### Structure
@@ -79,10 +81,10 @@ An optional **Playwright** job runs on push to `main` (or via manual workflow_di
 
 **Backend (FastAPI)**
 
-1. Open `colab/run_backend_colab.ipynb` in Google Colab.
+1. Open `colab/run_backend_colab.ipynb` in Google Colab (via **File → Open notebook → GitHub**, then enter `https://github.com/YUVRAJ07092007/AKTU-Autonomous-Institution-Application` and open **colab/run_backend_colab.ipynb**).
 2. Run the first code cell:
-   - Mounts Google Drive
-   - Clones or pulls the private GitHub repo into `/content/aktu-autonomy-portal` (you will be prompted for a GitHub PAT)
+   - Mounts Google Drive (or uses local storage if mount fails)
+   - Clones or pulls the repo into `/content/aktu-autonomy-portal` (you will be prompted for a GitHub PAT)
    - Installs backend dependencies from `backend/requirements.txt`
    - Runs `alembic upgrade head` against a SQLite DB on Drive
 3. Run the second code cell:
@@ -95,6 +97,6 @@ An optional **Playwright** job runs on push to `main` (or via manual workflow_di
 If you want to preview the Next.js UI from Colab:
 
 1. Ensure the repo is already cloned at `/content/aktu-autonomy-portal` (via the backend notebook).
-2. When available, open `colab/run_frontend_preview_colab.ipynb`.
+2. When available, open `colab/run_frontend_preview_colab.ipynb` from [AKTU-Autonomous-Institution-Application](https://github.com/YUVRAJ07092007/AKTU-Autonomous-Institution-Application).
 3. Run all cells to install Node dependencies, start `npm run dev` on port `3000`, and expose it via ngrok.
 

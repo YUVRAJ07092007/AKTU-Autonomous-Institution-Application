@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
 
@@ -20,9 +20,14 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 
+def get_url() -> str:
+    """Use app settings so DB path (e.g. AKTU_DB_PATH / Drive) is consistent."""
+    return get_settings().database_url
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
-    url = get_settings().database_url
+    url = get_url()
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -35,14 +40,11 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode."""
-    connectable = AsyncEngine(
-        engine_from_config(
-            config.get_section(config.config_ini_section) or {},
-            prefix="sqlalchemy.",
-            poolclass=pool.NullPool,
-            future=True,
-        )
+    """Run migrations in 'online' mode (same DB URL as app)."""
+    url = get_url()
+    connectable = create_async_engine(
+        url,
+        poolclass=pool.NullPool,
     )
 
     async def do_run_migrations() -> None:

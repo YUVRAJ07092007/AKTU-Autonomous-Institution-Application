@@ -1,7 +1,7 @@
 # AKTU Academic Autonomy Portal — Cursor Prompt Pack
 **Target:** Professional web app (Frontend + Backend) for AKTU autonomy applications  
 **Environment:** Google Colab-first (no Docker required for MVP)  
-**Repo:** Private GitHub monorepo `aktu-autonomy-portal/`  
+**Repo:** [https://github.com/YUVRAJ07092007/AKTU-Autonomous-Institution-Application](https://github.com/YUVRAJ07092007/AKTU-Autonomous-Institution-Application)  
 **Date:** 2026-03-03
 
 ## Non‑negotiables (apply to every task)
