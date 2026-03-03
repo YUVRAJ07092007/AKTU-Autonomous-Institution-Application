@@ -18,10 +18,10 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "applications",
-        sa.Column("ugc_approval_recorded", sa.Boolean(), nullable=False, server_default="0"),
-    )
+    with op.batch_alter_table("applications", schema=None) as batch_op:
+        batch_op.add_column(
+            sa.Column("ugc_approval_recorded", sa.Boolean(), nullable=False, server_default="0"),
+        )
     op.create_table(
         "mom_content",
         sa.Column("id", sa.Integer(), primary_key=True),
@@ -36,4 +36,5 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table("mom_content")
-    op.drop_column("applications", "ugc_approval_recorded")
+    with op.batch_alter_table("applications", schema=None) as batch_op:
+        batch_op.drop_column("ugc_approval_recorded")

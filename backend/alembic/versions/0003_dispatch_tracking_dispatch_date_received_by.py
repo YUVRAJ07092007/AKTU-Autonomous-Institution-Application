@@ -18,18 +18,16 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "dispatch_tracking",
-        sa.Column("dispatch_date", sa.DateTime(timezone=True), nullable=True),
-    )
-    op.add_column(
-        "dispatch_tracking",
-        sa.Column("received_by_user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-    )
-    op.create_index("ix_dispatch_tracking_received_by_user_id", "dispatch_tracking", ["received_by_user_id"], unique=False)
+    with op.batch_alter_table("dispatch_tracking", schema=None) as batch_op:
+        batch_op.add_column(sa.Column("dispatch_date", sa.DateTime(timezone=True), nullable=True))
+        batch_op.add_column(
+            sa.Column("received_by_user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        )
+        batch_op.create_index("ix_dispatch_tracking_received_by_user_id", ["received_by_user_id"], unique=False)
 
 
 def downgrade() -> None:
-    op.drop_index("ix_dispatch_tracking_received_by_user_id", table_name="dispatch_tracking")
-    op.drop_column("dispatch_tracking", "received_by_user_id")
-    op.drop_column("dispatch_tracking", "dispatch_date")
+    with op.batch_alter_table("dispatch_tracking", schema=None) as batch_op:
+        batch_op.drop_index("ix_dispatch_tracking_received_by_user_id", if_exists=True)
+        batch_op.drop_column("received_by_user_id")
+        batch_op.drop_column("dispatch_date")
