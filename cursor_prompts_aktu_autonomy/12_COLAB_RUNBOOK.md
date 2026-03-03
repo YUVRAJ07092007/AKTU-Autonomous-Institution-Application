@@ -40,5 +40,13 @@ Make the entire project runnable in Google Colab (backend + minimal frontend pre
   - Use ngrok to expose frontend
 - Documentation in README: exact cells/commands.
 
+### Ngrok in Colab (apply in all future Colab runbooks)
+- **Ngrok requires a verified account and authtoken.** Do not assume unauthenticated ngrok; it will fail with `ERR_NGROK_4018`.
+- In any notebook cell that calls `ngrok.connect()`:
+  - **Prompt for the authtoken** if not set (e.g. `os.environ.get("NGROK_AUTHTOKEN")` or `getpass.getpass(...)`), then call `ngrok.set_auth_token(token)` before `ngrok.connect()`.
+  - Add a **markdown cell immediately before** that code cell titled e.g. **"Where to paste your ngrok authtoken"** explaining: when you run the next cell, an input box appears in the **output area below the cell**; paste your authtoken there and press Enter. Link to https://dashboard.ngrok.com/get-started/your-authtoken.
+  - Use a **clear prompt string** in `getpass.getpass(...)` e.g. "Ngrok authtoken — paste in the box below and press Enter:" so users know exactly where to paste.
+- In README/instructions, mention that users need a free ngrok account and must paste the authtoken when the notebook asks for it.
+
 ### Acceptance
 - A user can run backend fully from Colab without manual Linux setup.

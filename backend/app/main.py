@@ -46,6 +46,17 @@ async def audit_log_middleware(request: Request, call_next):
     return response
 
 
+@app.get("/")
+async def root() -> JSONResponse:
+    """Root: point users to the API."""
+    return JSONResponse({
+        "service": "AKTU Academic Autonomy Portal API",
+        "docs": "/docs",
+        "health": "/api/health/live",
+        "health_auth": "/api/health",
+    })
+
+
 @app.get("/api/health/live")
 async def health_live() -> JSONResponse:
     """Unauthenticated liveness probe for load balancers and k8s."""

@@ -1,0 +1,19 @@
+---
+description: Colab notebooks using ngrok must prompt for authtoken and show where to paste it
+globs: colab/**/*.ipynb
+alwaysApply: false
+---
+
+# Ngrok in Google Colab
+
+When adding or editing Colab notebooks that use **ngrok** to expose a local server:
+
+1. **Ngrok requires a verified account and authtoken.** Unauthenticated ngrok fails with `ERR_NGROK_4018`. Always prompt for the token if not already set.
+
+2. **Before `ngrok.connect()`:** Get the token via `os.environ.get("NGROK_AUTHTOKEN")` or `getpass.getpass("...")`, then call `ngrok.set_auth_token(token)`.
+
+3. **Clear “where to paste” instructions:**
+   - Add a **markdown cell** immediately before the cell that runs ngrok, titled e.g. **"Where to paste your ngrok authtoken"**, stating: when you run the next cell, an input box appears in the **output area below the cell**; paste your authtoken there and press Enter. Link to https://dashboard.ngrok.com/get-started/your-authtoken.
+   - Use an explicit **prompt string** in `getpass.getpass(...)`, e.g. `"Ngrok authtoken — paste in the box below and press Enter:"`.
+
+4. In README or notebook intro, mention that users need a free ngrok account and must paste the authtoken when prompted.
