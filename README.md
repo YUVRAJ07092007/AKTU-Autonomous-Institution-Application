@@ -81,7 +81,7 @@ An optional **Playwright** job runs on push to `main` (or via manual workflow_di
 
 **Backend (FastAPI)**
 
-1. Open `colab/run_backend_colab.ipynb` in Google Colab (via **File → Open notebook → GitHub**, then enter `https://github.com/YUVRAJ07092007/AKTU-Autonomous-Institution-Application` and open **colab/run_backend_colab.ipynb**).
+1. **Open the notebook in Colab:** click **[Open in Colab](https://colab.research.google.com/github/YUVRAJ07092007/AKTU-Autonomous-Institution-Application/blob/main/colab/AKTU-Autonomous-Institution-Application_run_backend_colab.ipynb)** (or in Colab: **File → Open notebook → GitHub**, then open `colab/AKTU-Autonomous-Institution-Application_run_backend_colab.ipynb`).
 2. Run the first code cell:
    - Mounts Google Drive (or uses local storage if mount fails)
    - Clones or pulls the repo into `/content/aktu-autonomy-portal` (you will be prompted for a GitHub PAT)

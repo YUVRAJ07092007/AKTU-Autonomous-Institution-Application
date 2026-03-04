@@ -12,7 +12,7 @@
 - No secrets committed. Use `.env` locally and `os.environ` in Colab.
 - Add **validation** (Pydantic) and **tests** (pytest) for each module.
 - Prefer **pure Python** libs; avoid system dependencies where possible.
-- Provide concise run steps in `README.md` and in `colab/run_backend_colab.ipynb`.
+- Provide concise run steps in `README.md` and in `colab/AKTU-Autonomous-Institution-Application_run_backend_colab.ipynb`.
 
 ## Coding standards
 - Python 3.10+
@@ -43,7 +43,7 @@ Create a production-grade monorepo skeleton for the AKTU Academic Autonomy Porta
 4. Minimal working frontend:
    - Home page with “API base URL” read from env and a health-check button.
 5. Colab runner:
-   - `colab/run_backend_colab.ipynb` that clones repo, installs deps, mounts Drive, runs FastAPI, starts ngrok, prints public URL.
+   - `colab/AKTU-Autonomous-Institution-Application_run_backend_colab.ipynb` that clones repo, installs deps, mounts Drive, runs FastAPI, starts ngrok, prints public URL.
 
 ### Constraints
 - No Docker required for MVP; optional Dockerfile later.

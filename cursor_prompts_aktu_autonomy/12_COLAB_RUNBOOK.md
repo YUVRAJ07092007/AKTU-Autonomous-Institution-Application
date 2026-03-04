@@ -12,7 +12,7 @@
 - No secrets committed. Use `.env` locally and `os.environ` in Colab.
 - Add **validation** (Pydantic) and **tests** (pytest) for each module.
 - Prefer **pure Python** libs; avoid system dependencies where possible.
-- Provide concise run steps in `README.md` and in `colab/run_backend_colab.ipynb`.
+- Provide concise run steps in `README.md` and in `colab/AKTU-Autonomous-Institution-Application_run_backend_colab.ipynb`.
 
 ## Coding standards
 - Python 3.10+
@@ -27,7 +27,7 @@
 Make the entire project runnable in Google Colab (backend + minimal frontend preview).
 
 ### Deliverables
-- `colab/run_backend_colab.ipynb`
+- `colab/AKTU-Autonomous-Institution-Application_run_backend_colab.ipynb`
   - Drive mount
   - Clone/pull private GitHub repo (token from input)
   - Install deps
