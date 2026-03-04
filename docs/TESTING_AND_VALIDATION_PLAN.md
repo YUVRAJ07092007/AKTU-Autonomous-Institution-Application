@@ -27,7 +27,7 @@
 
 | Goal | Description |
 |------|-------------|
-| **Synthetic data** | Run a seed script against the real app database (local or Colab) to create 2 institutions, one user per role (6 users) with a known password, and 2–3 applications in different workflow statuses. The script **verifies** that data was created suitably and effectively (counts and role/status coverage) and exits with code 1 if not. |
+| **Synthetic data** | Run a seed script against the real app database (local or Colab) to create 2 institutions, 7 users (INSTITUTION x2, one each for DEALING_HAND, REGISTRAR, COMMITTEE, AUTHORITY, ACCOUNTS) with a known password, and several applications across workflow statuses. The script **verifies** that data was created suitably and effectively (counts and role/status coverage) and exits with code 1 if not. |
 | **Automated tests** | Document how to run the existing pytest suite, frontend lint/build/e2e, and CI so testers and CI use the same commands. |
 | **Testing with synthetic data** | Define a structured test procedure (scenarios by role and by feature) so the software is tested **suitably** using the seeded data; document it in the testing guide and optionally support it with a script that runs API checks against the seeded backend. |
 | **Detailed testing report** | Provide a **process** report (how testing was done, environment, seed run, dates, tester) and a **product** report (test cases, expected vs actual, pass/fail, summary) via a report template and, optionally, a report generator. |
@@ -61,8 +61,8 @@
 | Entity | Count | Details |
 |--------|-------|---------|
 | **Institutions** | 2 | e.g. "Synthetic College A" and "Synthetic College B"; unique `code`, address, district, contact_email, contact_phone. |
-| **Users** | 6 | One per role: INSTITUTION (2, one per institution), DEALING_HAND, REGISTRAR, COMMITTEE, AUTHORITY, ACCOUNTS. Shared password (e.g. `Test@123`), hashed via app’s `hash_password`. INSTITUTION users have `institution_id` set; others null. |
-| **Applications** | 2–3 | Attached to seeded institutions; statuses such as DRAFT, SUBMITTED_ONLINE or HARDCOPY_RECEIVED, and optionally UNDER_SCRUTINY or SCRUTINY_CLEARED. Required fields: `institution_id`, `status`, `requested_from_year`, `programmes_json`, `ugc_policy_mode`, `ugc_approval_recorded`. |
+| **Users** | 7 | INSTITUTION (2, one per institution), DEALING_HAND, REGISTRAR, COMMITTEE, AUTHORITY, ACCOUNTS. Shared password (e.g. `Test@123`), hashed via app’s `hash_password`. INSTITUTION users have `institution_id` set; others null. |
+| **Applications** | 4–6+ | Attached to seeded institutions; statuses spanning DRAFT, SUBMITTED_ONLINE, HARDCOPY_RECEIVED, UNDER_SCRUTINY, SCRUTINY_CLEARED, MOM_FINALIZED, etc. Required fields: `institution_id`, `status`, `requested_from_year`, `programmes_json`, `ugc_policy_mode`, `ugc_approval_recorded`. |
 
 ### 3.3 Implementation notes
 
@@ -79,9 +79,9 @@
 ### 3.5 Verification (suitability and effectiveness)
 
 - **Post-seed self-check (in script):** After committing, re-query and verify:
-  1. Exactly 2 institutions.
-  2. Exactly 6 users with one per role (INSTITUTION x2, DEALING_HAND, REGISTRAR, COMMITTEE, AUTHORITY, ACCOUNTS).
-  3. At least 2 and at most 5 applications with statuses spanning different workflow stages (e.g. at least one DRAFT, one beyond DRAFT such as SUBMITTED_ONLINE or HARDCOPY_RECEIVED, and optionally one further along).
+  1. At least 2 institutions.
+  2. At least 6 users (typically 7 with INSTITUTION x2; one per role).
+  3. At least 2 and at most 10 applications with statuses spanning different workflow stages (e.g. at least one DRAFT, one beyond DRAFT such as SUBMITTED_ONLINE or HARDCOPY_RECEIVED, and optionally further along).
 - If any check fails: print expected vs found and **exit with code 1**.
 - **Printed report:** Summary line per entity type and list of application statuses so a human can confirm the seed is effective for manual workflow testing.
 
@@ -251,23 +251,23 @@ Enable generation of a **detailed testing report** covering:
 
 **Process report (sections/fields):**
 
-- Report date  
-- Tester name  
-- Git commit hash  
+- Report date, tester name  
+- Build/version: Git branch, Git commit hash, release tag (if any)  
+- BASE_URL tested (single source; do not duplicate elsewhere)  
 - Environment: OS, Python version, Node version, DB path (or "in-memory" for pytest)  
-- BASE_URL used (e.g. local or ngrok URL)  
 - Seed data: whether used; if yes, seed command and script output summary/version tag  
 - Test execution: manual vs automated; if automated, command (e.g. `pytest` or script name); if manual, reference to TESTING_GUIDE sections  
-- Duration  
-- Notes  
+- Duration, notes  
 
 **Product report (sections):**
 
 - Test scope (e.g. "API with synthetic data", "pytest suite", "frontend build")  
 - List of test scenarios/cases: scenario id, description, expected result, actual result, pass/fail  
+- Failures/deviations table (if any): failure ID, scenario ID, step #, endpoint/action, expected, actual, HTTP code, evidence path  
 - On failure: step number, HTTP status code, response body or error message (as in [Section 6.4](#64-failure-capture))  
 - Summary: total passed, failed, skipped; optional coverage or area summary  
 - Defects or observations (optional table: id, description, severity)  
+- Evidence links/attachments: BASE_URL, OpenAPI snapshot, seed output log, backend/frontend log paths  
 
 ### 7.3 Usage
 
@@ -350,7 +350,7 @@ These criteria should be met before marking a test cycle as complete or before a
 
 Use this checklist when reviewing the plan or when verifying implementation.
 
-- [ ] **Seed script:** Creates 2 institutions, 6 users (one per role), 2–3 applications with varied statuses; uses app’s session/config; runs post-seed verification and exits 1 on failure; prints user table and summary.
+- [ ] **Seed script:** Creates 2 institutions, 7 users (INSTITUTION x2 plus one per other role), 4–6+ applications with varied statuses; uses app’s session/config; runs post-seed verification and exits 1 on failure; prints user table and summary.
 - [ ] **Suitable elements:** Application payload variety, application–institution mapping documented, status coverage for transitions, optional related entities, negative scenarios in guide, workflow consistency.
 - [ ] **Known issues:** Idempotency, production guard, weak password, schema drift, institution visibility, missing files, failure capture fields, clean-state instructions—all documented in guide and/or script.
 - [ ] **Testing guide:** Contains all sections in [Section 5](#5-testing-guide-structure) and the test scenarios in [Section 6](#6-test-scenarios-synthetic-data).

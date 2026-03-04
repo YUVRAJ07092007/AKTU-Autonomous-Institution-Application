@@ -6,15 +6,19 @@
 
 ## Process report
 
+**Build / version:** Record once here; do not duplicate BASE_URL or auth elsewhere in the report.
+
 | Field | Value |
 |-------|--------|
 | **Report date** | *(YYYY-MM-DD)* |
 | **Tester name** | |
+| **Git branch** | *(e.g. `main`)* |
 | **Git commit hash** | *(e.g. output of `git rev-parse HEAD`)* |
+| **Release tag (if any)** | |
+| **BASE_URL tested** | *(e.g. `http://127.0.0.1:8000` or ngrok URL — single source for this run)* |
 | **Environment — OS** | |
 | **Environment — Python version** | |
 | **Environment — Node version** | |
-| **BASE_URL used** | *(e.g. `http://127.0.0.1:8000` or ngrok URL)* |
 | **Environment — DB path** | *(e.g. path to SQLite file, or "in-memory" for pytest)* |
 | **Seed data used?** | *(Yes / No)* |
 | **Seed command** | *(if used: e.g. `PYTHONPATH=backend python backend/scripts/seed_synthetic_data.py`)* |
@@ -39,7 +43,14 @@
 | 2 | | | | |
 | *(add rows as needed)* | | | | |
 
-**On failure:** For any failed scenario, record **step number**, **HTTP status code**, and **response body or error message** in the Notes or in a separate "Failures" table below.
+**On failure:** For any failed scenario, record **step number**, **HTTP status code**, and **response body or error message** below and in the Summary.
+
+### Failures / deviations (if any)
+
+| Failure ID | Scenario ID | Step # | Endpoint / action | Expected | Actual | HTTP | Evidence (log/screenshot path) |
+|------------|-------------|--------|-------------------|----------|--------|------|-------------------------------|
+| F-001 | *(e.g. SCN-03)* | *(e.g. 4)* | *(e.g. `POST /api/applications/{id}/decision`)* | *(e.g. 409 invalid transition)* | *(e.g. 200 OK)* | *(e.g. 200)* | *(e.g. `logs/backend.log` or screenshot)* |
+| *(add rows as needed)* | | | | | | | |
 
 ### Summary
 
@@ -57,6 +68,18 @@
 |----|-------------|----------|
 | | | *(High / Medium / Low)* |
 | *(add rows as needed)* | | |
+
+### Evidence links / attachments
+
+*(So every report is debuggable.)*
+
+| Item | Value |
+|------|--------|
+| **BASE_URL tested** | *(same as Process report; do not duplicate)* |
+| **OpenAPI snapshot** | *(e.g. `/openapi.json` saved as `artifacts/openapi-YYYY-MM-DD.json` or N/A)* |
+| **Seed output log** | *(path or paste one-line summary)* |
+| **Backend log path** | *(if captured)* |
+| **Frontend console log** | *(if captured)* |
 
 ---
 

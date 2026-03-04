@@ -25,7 +25,7 @@ For **developers and testers**. Two ways to test:
 **Auth header (JWT):**
 - `Authorization: Bearer <access_token>`
 
-**Rule:** All testers must use the same `BASE_URL` during a run and must record it (together with the git commit hash and seed usage) in the testing report.
+**Rule:** All testers must use the same `BASE_URL` during a run. Every test report must record **git commit hash**, **BASE_URL**, and **seed version** (or seed script output summary) so runs are traceable.
 
 ---
 
@@ -51,22 +51,22 @@ For **developers and testers**. Two ways to test:
 For **repeatable manual testing**, use the seed script (`backend/scripts/seed_synthetic_data.py`) **after** `alembic upgrade head` to load at least:
 
 - **2 institutions** (e.g. Synthetic College A/B).
-- **6 users** — one per role (INSTITUTION x2, DEALING_HAND, REGISTRAR, COMMITTEE, AUTHORITY, ACCOUNTS) with a shared password (e.g. `Test@123`).
-- **2–3 applications** in different workflow statuses (e.g. DRAFT, SUBMITTED_ONLINE, HARDCOPY_RECEIVED).
+- **7 users** — INSTITUTION x2 (one per institution), plus DEALING_HAND, REGISTRAR, COMMITTEE, AUTHORITY, ACCOUNTS, with a shared password (e.g. `Test@123`).
+- **At least 4–6 applications** across workflow phases (see [TESTING_AND_VALIDATION_PLAN.md](TESTING_AND_VALIDATION_PLAN.md) section 3.6).
 
-**How to run the seed (when available):** From repo root, set `ENV=dev` (or unset), set `JWT_SECRET`, optionally `AKTU_DB_PATH`. Then:
+**How to run the seed:** From repo root, set `ENV=dev` (or unset), set `JWT_SECRET`, optionally `AKTU_DB_PATH`. Then:
 
 ```bash
 PYTHONPATH=backend python backend/scripts/seed_synthetic_data.py
 ```
 
-The script prints a **table of seeded users** (email, role, password) and a short summary (e.g. "Institutions: 2, Users: 6, Applications: 3"). Use that table to log in as Authority, Registrar, etc.
+The script prints a **table of seeded users** (email, role, password) and a short summary (e.g. "Institutions: 2, Users: 7, Applications: 6"). Use that table to log in as Authority, Registrar, etc.
 
 **Application–institution mapping:** Each INSTITUTION user sees only their institution’s applications. The seed output or this guide will state which user sees which application(s) (e.g. College A user sees apps X, Y; College B sees app Z).
 
-**Verifying seed data:** The seed script runs a self-check and exits with code 1 if counts or role/status coverage are wrong. A successful run prints the summary and status list. Optional: after starting the backend, log in via Swagger with a seeded user and call `GET /api/applications/` to confirm 2–3 applications appear.
+**Verifying seed data:** The seed script runs a self-check and exits with code 1 if counts or role/status coverage are wrong. A successful run prints the summary and status list. Optional: after starting the backend, log in via Swagger with a seeded user and call `GET /api/applications/` to confirm applications appear (e.g. several per institution user).
 
-**Idempotency & reset:** Seed should be safe to run more than once. Either it no-ops when data is already present, or you explicitly reset the DB (e.g. delete the SQLite file in dev and run `alembic upgrade head` again) before re-running. The detailed expectations and options are described in `TESTING_AND_VALIDATION_PLAN.md`.
+**Idempotency & reset:** Running the seed multiple times MUST be safe: the script no-ops with a message like “already seeded” when seed users exist. To start fresh, delete the DB file (and uploads folder if desired, dev only) and run `alembic upgrade head`, then run the seed again.
 
 **Known issues:** Never use seed or shared password in production. The shared password is weak by design for dev only. After model/migration changes, update the seed script if needed. Document-upload scenarios may require manual upload if no document seed. For clean state: remove DB file, run migrations, run seed again. Colab: DB path on Drive; local: `AKTU_DB_PATH`.
 
@@ -110,9 +110,30 @@ Use the seeded users and applications to run a structured procedure. **On failur
 - **Health:** `GET /api/health`, `GET /api/health/live`.
 - **Auth:** Login/register with seeded credentials.
 - **Applications CRUD:** List, create, get by id (use seeded application ids; institution users see only their institution’s apps).
-- **Workflow transitions:** Use seeded applications and their statuses; only valid transitions (e.g. HARDCOPY_RECEIVED → UNDER_SCRUTINY by Dealing Hand). See workflow rules in the codebase.
+- **Workflow transitions:** Use the table below and seeded applications; invalid transitions should return **409** (recommended) or a single standardized error code.
 - **Documents:** Upload/list; seeded apps may have no documents—manual upload or optional metadata seed.
 - **Committee / Meeting / MoM / Decision:** If in scope; use applications in COMMITTEE_CONSTITUTED, MEETING_SCHEDULED, MOM_FINALIZED as appropriate.
+
+### Workflow transitions (endpoint-driven)
+
+Use this table for manual testing and automation. All paths are under `{BASE_URL}/api/applications`. If an invalid transition is attempted, the API should return **409 Conflict** (recommended) or a single standardized error code.
+
+| Status (before) | Endpoint | Role | Status (after) | Notes |
+|-----------------|----------|------|----------------|-------|
+| DRAFT | `POST /{id}/submit` | INSTITUTION | SUBMITTED_ONLINE | Validate required annexures before submit |
+| SUBMITTED_ONLINE | `POST /{id}/dispatch` | INSTITUTION | HARDCOPY_DISPATCHED | Speedpost no in payload |
+| HARDCOPY_DISPATCHED or SUBMITTED_ONLINE | `POST /{id}/receive` or `POST /{id}/ack-received` | DEALING_HAND | HARDCOPY_RECEIVED | Receiving office confirms; ack-received generates ACK document |
+| HARDCOPY_RECEIVED | `POST /{id}/start-scrutiny` | DEALING_HAND | UNDER_SCRUTINY | |
+| UNDER_SCRUTINY | `POST /{id}/deficiency` | DEALING_HAND | DEFICIENCY_RAISED | Deficiency remarks in payload |
+| DEFICIENCY_RAISED | *(back to UNDER_SCRUTINY per workflow; implement if needed)* | DEALING_HAND | UNDER_SCRUTINY | |
+| UNDER_SCRUTINY or HARDCOPY_RECEIVED | `POST /{id}/scrutiny-clear` | DEALING_HAND | SCRUTINY_CLEARED | |
+| SCRUTINY_CLEARED | `POST /{id}/committee` then `POST /{id}/committee/approve` | REGISTRAR (create), AUTHORITY (approve) | COMMITTEE_CONSTITUTED | Creates committee; approve generates office order |
+| COMMITTEE_CONSTITUTED | `POST /{id}/meetings` | REGISTRAR | MEETING_SCHEDULED | Meeting record created |
+| MEETING_SCHEDULED | `POST /{id}/mom/draft` | COMMITTEE | MOM_DRAFT_GENERATED | Draft MoM DOCX generated |
+| MOM_DRAFT_GENERATED | `GET/PUT /{id}/mom/content` | COMMITTEE | *(no status change)* | Edit content until ready |
+| MOM_DRAFT_GENERATED | `POST /{id}/mom/finalize` | COMMITTEE | MOM_FINALIZED | Lock edits after finalize |
+| MOM_FINALIZED | `POST /{id}/decision` | AUTHORITY | DECISION_ISSUED or CLOSED | Mode A/B UGC rules apply |
+| DECISION_ISSUED | `POST /{id}/decision` (e.g. close) | AUTHORITY | CLOSED | |
 
 ### Negative scenarios
 
@@ -122,7 +143,7 @@ Use the seeded users and applications to run a structured procedure. **On failur
 
 ---
 
-## 8. RBAC and negative smoke checklist (recommended)
+## RBAC and negative smoke checklist (recommended)
 
 Run these quick checks (manually or via automation) and record results in the testing report:
 
@@ -157,7 +178,7 @@ Optional: `ruff check app tests`, `black --check app tests`.
 - `pytest` exits with code **0** and prints a summary with all tests **passed** (no unexpected xfail/xfail strict failures).
 - Lint/format (`ruff`, `black --check`) exit with code **0** (no lint/format errors).
 - Frontend build (`npm run build`) exits with code **0** (no TypeScript/compile errors).
-- (If used) Playwright e2e exits with code **0`; screenshots or artifacts are stored under the configured output directory.
+- (If used) Playwright e2e exits with code **0**; screenshots or artifacts are stored under the configured output directory.
 
 ---
 

@@ -169,8 +169,25 @@ async def apply_seed(session) -> None:
     session.add_all(apps)
 
 
+def _print_seeded_user_table() -> None:
+    """Print the canonical table of seeded users for the testing guide."""
+    print("\nSeeded users (use these to log in; password is same for all):")
+    print("  Email                              | Role        | Password")
+    print("  -----------------------------------|-------------|----------")
+    for email, role in [
+        (f"institution_a@{SEED_EMAIL_DOMAIN}", "INSTITUTION"),
+        (f"institution_b@{SEED_EMAIL_DOMAIN}", "INSTITUTION"),
+        (f"dealing_hand@{SEED_EMAIL_DOMAIN}", "DEALING_HAND"),
+        (f"registrar@{SEED_EMAIL_DOMAIN}", "REGISTRAR"),
+        (f"committee@{SEED_EMAIL_DOMAIN}", "COMMITTEE"),
+        (f"authority@{SEED_EMAIL_DOMAIN}", "AUTHORITY"),
+        (f"accounts@{SEED_EMAIL_DOMAIN}", "ACCOUNTS"),
+    ]:
+        print(f"  {email:<35} | {role:<11} | {SEED_PASSWORD}")
+
+
 async def verify_seed(session) -> bool:
-    """Verify counts and workflow coverage; print a short report."""
+    """Verify counts and workflow coverage; print a short report. Returns True if OK."""
     inst_count = (await session.execute(select(func.count()).select_from(Institution))).scalar_one()
     user_count = (await session.execute(select(func.count()).select_from(User))).scalar_one()
 
@@ -180,7 +197,8 @@ async def verify_seed(session) -> bool:
     app_statuses = [row[0] for row in app_rows]
     app_count = len(app_statuses)
 
-    print(f"Institutions: {inst_count}, Users: {user_count}, Applications: {app_count}")
+    _print_seeded_user_table()
+    print(f"\nInstitutions: {inst_count}, Users: {user_count}, Applications: {app_count}")
     print("Application statuses:", ", ".join(sorted(set(app_statuses))) or "(none)")
 
     ok = True
