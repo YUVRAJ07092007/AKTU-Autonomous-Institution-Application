@@ -13,6 +13,22 @@ For **developers and testers**. Two ways to test:
 
 ---
 
+## Environment & Access (canonical)
+
+**BASE_URL (choose one):**
+- Local: `http://127.0.0.1:8000`
+- Public tunnel (ngrok): `https://<your-ngrok-subdomain>.ngrok-free.app`
+
+**Swagger UI:** `{BASE_URL}/docs`  
+**OpenAPI JSON:** `{BASE_URL}/openapi.json`
+
+**Auth header (JWT):**
+- `Authorization: Bearer <access_token>`
+
+**Rule:** All testers must use the same `BASE_URL` during a run and must record it (together with the git commit hash and seed usage) in the testing report.
+
+---
+
 ## 2. Prerequisites
 
 - **Backend:** Python 3.10+, `backend/.env` (or env vars). Required: `JWT_SECRET`. Optional: `AKTU_DB_PATH`, `UPLOAD_DIR`. SQLite.
@@ -32,7 +48,7 @@ For **developers and testers**. Two ways to test:
 
 ## 4. Synthetic data for manual testing
 
-When the seed script is available (`backend/scripts/seed_synthetic_data.py`), run it **after** `alembic upgrade head` to load:
+For **repeatable manual testing**, use the seed script (`backend/scripts/seed_synthetic_data.py`) **after** `alembic upgrade head` to load at least:
 
 - **2 institutions** (e.g. Synthetic College A/B).
 - **6 users** — one per role (INSTITUTION x2, DEALING_HAND, REGISTRAR, COMMITTEE, AUTHORITY, ACCOUNTS) with a shared password (e.g. `Test@123`).
@@ -50,7 +66,9 @@ The script prints a **table of seeded users** (email, role, password) and a shor
 
 **Verifying seed data:** The seed script runs a self-check and exits with code 1 if counts or role/status coverage are wrong. A successful run prints the summary and status list. Optional: after starting the backend, log in via Swagger with a seeded user and call `GET /api/applications/` to confirm 2–3 applications appear.
 
-**Known issues:** Run seed once on an empty DB (or reset by deleting the DB file and running `alembic upgrade head`). Never use seed or shared password in production. The shared password is weak by design for dev only. After model/migration changes, update the seed script if needed. Document-upload scenarios may require manual upload if no document seed. For clean state: remove DB file, run migrations, run seed again. Colab: DB path on Drive; local: `AKTU_DB_PATH`.
+**Idempotency & reset:** Seed should be safe to run more than once. Either it no-ops when data is already present, or you explicitly reset the DB (e.g. delete the SQLite file in dev and run `alembic upgrade head` again) before re-running. The detailed expectations and options are described in `TESTING_AND_VALIDATION_PLAN.md`.
+
+**Known issues:** Never use seed or shared password in production. The shared password is weak by design for dev only. After model/migration changes, update the seed script if needed. Document-upload scenarios may require manual upload if no document seed. For clean state: remove DB file, run migrations, run seed again. Colab: DB path on Drive; local: `AKTU_DB_PATH`.
 
 **Note:** Pytest uses an in-memory DB and creates its own data; the seed is not used in CI.
 
@@ -104,6 +122,18 @@ Use the seeded users and applications to run a structured procedure. **On failur
 
 ---
 
+## 8. RBAC and negative smoke checklist (recommended)
+
+Run these quick checks (manually or via automation) and record results in the testing report:
+
+- Wrong role calls a privileged endpoint (e.g. decision issue) → **403**.
+- Institution A tries to read Institution B’s application → **404** (recommended) or **403** (whichever the API standardizes on).
+- Invalid workflow transition (e.g. decision before MoM finalize) → **409** (recommended) or a single standardized error code used for all invalid transitions.
+- Missing or expired token → **401**.
+- Bad payload schema → **422** (FastAPI default) or **400** if you normalize errors.
+
+---
+
 ## 8. Automated tests
 
 **Backend (from `backend/`):**
@@ -121,6 +151,13 @@ Optional: `ruff check app tests`, `black --check app tests`.
 **Frontend (from `frontend/`):** `npm run lint`, `npm run build`. Optional: `npx playwright install`, then `npm run test:e2e`.
 
 **CI:** [.github/workflows/ci.yml](../.github/workflows/ci.yml) runs backend (ruff, black, pytest) and frontend (lint, build) on push/PR; optional Playwright job.
+
+### Expected outcomes
+
+- `pytest` exits with code **0** and prints a summary with all tests **passed** (no unexpected xfail/xfail strict failures).
+- Lint/format (`ruff`, `black --check`) exit with code **0** (no lint/format errors).
+- Frontend build (`npm run build`) exits with code **0** (no TypeScript/compile errors).
+- (If used) Playwright e2e exits with code **0`; screenshots or artifacts are stored under the configured output directory.
 
 ---
 

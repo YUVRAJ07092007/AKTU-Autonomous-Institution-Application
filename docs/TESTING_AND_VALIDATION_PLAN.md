@@ -18,7 +18,8 @@
 7. [Detailed testing report (process and product)](#7-detailed-testing-report-process-and-product)
 8. [Out of scope](#8-out-of-scope)
 9. [End-to-end flow](#9-end-to-end-flow)
-10. [Review checklist](#10-review-checklist)
+10. [Exit criteria (definition of done)](#10-exit-criteria-definition-of-done)
+11. [Review checklist](#11-review-checklist)
 
 ---
 
@@ -83,6 +84,22 @@
   3. At least 2 and at most 5 applications with statuses spanning different workflow stages (e.g. at least one DRAFT, one beyond DRAFT such as SUBMITTED_ONLINE or HARDCOPY_RECEIVED, and optionally one further along).
 - If any check fails: print expected vs found and **exit with code 1**.
 - **Printed report:** Summary line per entity type and list of application statuses so a human can confirm the seed is effective for manual workflow testing.
+
+### 3.6 Seed dataset required for coverage (minimum)
+
+To avoid hand-crafting state for every test run, seed at least **one application per major phase** of the lifecycle (using the statuses in `workflow.py`):
+
+- App A: **DRAFT**
+- App B: **SUBMITTED_ONLINE / HARDCOPY_DISPATCHED / HARDCOPY_RECEIVED**
+- App C: **UNDER_SCRUTINY / DEFICIENCY_RAISED**
+- App D: **SCRUTINY_CLEARED / COMMITTEE_CONSTITUTED / MEETING_SCHEDULED**
+- App E: **MOM_DRAFT_GENERATED / MOM_FINALIZED**
+- App F (optional): **DECISION_ISSUED** (and optionally **CLOSED**)
+
+Also seed:
+
+- 2 institutions (A, B) with separate institution users.
+- 1 dealing hand, 1 registrar, 1 committee member, 1 authority/admin (matching `UserRole`).
 
 ---
 
@@ -184,6 +201,41 @@ A small script (e.g. `backend/scripts/run_synthetic_data_tests.py`) that, agains
 - Records pass/fail per scenario.
 - Writes a machine-readable summary (e.g. JSON or a section of the report) to support generating the product part of the report automatically.
 
+### 6.6 UGC policy toggle — acceptance tests
+
+These acceptance tests are derived from `can_issue_granted` in `workflow.py` and should be kept in sync with the implementation.
+
+**Precondition:** Application is in `MOM_FINALIZED` and ready for decision issuance (endpoint: decision issuance API for the application).
+
+#### Mode A (Strict)
+
+- Set `ugc_policy_mode = "A"`.
+- Ensure `ugc_approval_recorded = false`.
+- Attempt to issue a **Granted** decision for the application.
+  - Expected: decision is **blocked** (e.g. HTTP 409 Conflict or 400 Bad Request) with a message equivalent to “Mode A (Strict): Decision 'Granted' is blocked until UGC approval is recorded.”
+- Then set `ugc_approval_recorded = true`.
+  - Expected: decision succeeds; label is a normal granted decision.
+
+#### Mode B (Parallel)
+
+- Set `ugc_policy_mode = "B"`.
+- Ensure `ugc_approval_recorded = false`.
+- Attempt to issue a **Granted** decision for the application.
+  - Expected: decision is **allowed**, but is labelled “Subject to UGC” (or equivalent wording in the UI/letter).
+  - Expected (if implemented): the system generates or updates a UGC recommendation packet/document linked to the application.
+
+These tests should be reflected in both manual scenarios (Swagger/frontend) and any automated tests around decision issuance.
+
+### 6.7 Error code standards (contract)
+
+To keep behavior consistent across endpoints, error codes should follow a simple contract:
+
+- **401** — Missing or expired authentication token.
+- **403** — Authenticated but not permitted (RBAC failure).
+- **404** — Cross-tenant access (e.g. Institution A accessing Institution B’s application), or resource not found; alternatively 403 if that is the global choice, but it must be consistent.
+- **409** — Invalid workflow transition (recommended for attempting a transition not allowed by `can_transition` or trying to issue a decision in an invalid state).
+- **422** — Schema validation error (FastAPI default) or **400** if you normalize errors; whichever is chosen should be used consistently.
+
 ---
 
 ## 7. Detailed testing report (process and product)
@@ -201,8 +253,10 @@ Enable generation of a **detailed testing report** covering:
 
 - Report date  
 - Tester name  
+- Git commit hash  
 - Environment: OS, Python version, Node version, DB path (or "in-memory" for pytest)  
-- Seed data: whether used; if yes, seed command and script output summary  
+- BASE_URL used (e.g. local or ngrok URL)  
+- Seed data: whether used; if yes, seed command and script output summary/version tag  
 - Test execution: manual vs automated; if automated, command (e.g. `pytest` or script name); if manual, reference to TESTING_GUIDE sections  
 - Duration  
 - Notes  
@@ -276,7 +330,23 @@ flowchart LR
 
 ---
 
-## 10. Review checklist
+## 10. Exit criteria (definition of done)
+
+These criteria should be met before marking a test cycle as complete or before a “Go/Release” decision:
+
+- **All in-scope Swagger endpoints** have been invoked successfully at least once on the happy path, or are explicitly marked “out of scope” in the report.
+- RBAC negative checks (401/403/404) have been executed and documented (see Section 6.3 and the RBAC checklist in `TESTING_GUIDE.md`).
+- Invalid workflow transition behavior has been verified and is consistent with the error-code contract (409 recommended).
+- Document upload and download have been verified, including basic file integrity (content can be opened after round-trip).
+- MoM draft → content update → finalize path has been verified.
+- Decision issuance has been verified for both UGC modes:
+  - Mode A blocks “Granted” decisions until UGC approval is recorded.
+  - Mode B allows “Granted” decisions labeled “Subject to UGC” and (if implemented) generates/links the UGC recommendation packet.
+- At least one testing report has been generated using `TESTING_REPORT_TEMPLATE.md` and attached to the relevant release artifact/PR.
+
+---
+
+## 11. Review checklist
 
 Use this checklist when reviewing the plan or when verifying implementation.
 

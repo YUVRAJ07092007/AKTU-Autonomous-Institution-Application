@@ -10,13 +10,15 @@
 |-------|--------|
 | **Report date** | *(YYYY-MM-DD)* |
 | **Tester name** | |
+| **Git commit hash** | *(e.g. output of `git rev-parse HEAD`)* |
 | **Environment — OS** | |
 | **Environment — Python version** | |
 | **Environment — Node version** | |
+| **BASE_URL used** | *(e.g. `http://127.0.0.1:8000` or ngrok URL)* |
 | **Environment — DB path** | *(e.g. path to SQLite file, or "in-memory" for pytest)* |
 | **Seed data used?** | *(Yes / No)* |
 | **Seed command** | *(if used: e.g. `PYTHONPATH=backend python backend/scripts/seed_synthetic_data.py`)* |
-| **Seed script output summary** | *(if used: one-line summary from script printout)* |
+| **Seed script output summary / version tag** | *(if used: one-line summary from script printout or version tag)* |
 | **Test execution** | *(Manual / Automated / Both)* |
 | **Automated command(s)** | *(e.g. `pytest`, script name, or N/A)* |
 | **Manual reference** | *(e.g. TESTING_GUIDE sections 5–7)* |

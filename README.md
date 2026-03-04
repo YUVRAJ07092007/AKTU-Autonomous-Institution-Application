@@ -77,6 +77,23 @@ On push/PR to `main` (or `master`), the workflow in `.github/workflows/ci.yml` r
 
 An optional **Playwright** job runs on push to `main` (or via manual workflow_dispatch) to execute the smoke test. Pre-commit hooks for ruff/black are optional (add to your local repo if desired).
 
+### Seed data for repeatable manual testing
+
+For consistent manual testing, especially across roles and workflow phases, use the seed script:
+
+```bash
+PYTHONPATH=backend python backend/scripts/seed_synthetic_data.py
+```
+
+Run this **after** `alembic upgrade head` and with `JWT_SECRET` (and optionally `AKTU_DB_PATH`) set. The script:
+
+- Creates 2 institutions (A, B).
+- Creates one user per role plus two institution users, all with password `Test@123`.
+- Creates several applications across key workflow statuses (DRAFT, SUBMITTED_ONLINE, HARDCOPY_RECEIVED, UNDER_SCRUTINY, SCRUTINY_CLEARED, MOM_FINALIZED).
+- Prints a short summary (institution/user/application counts and statuses) and exits with code 1 if verification fails.
+
+See [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md) and [docs/TESTING_AND_VALIDATION_PLAN.md](docs/TESTING_AND_VALIDATION_PLAN.md) for details.
+
 ### Colab runner
 
 **Backend (FastAPI)**
