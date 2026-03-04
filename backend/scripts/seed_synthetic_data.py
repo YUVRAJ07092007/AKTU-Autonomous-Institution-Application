@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Sequence
 
 from sqlalchemy import select, func
@@ -114,7 +114,7 @@ async def apply_seed(session) -> None:
     session.add_all(users)
     await session.flush()
 
-    current_year = datetime.utcnow().year
+    current_year = datetime.now(timezone.utc).year
 
     apps: list[Application] = [
         Application(
